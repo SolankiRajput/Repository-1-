@@ -1,0 +1,137 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class VenueBooking {
+
+    private static final String BASE_URL = "http://43.205.87.112:8080";
+    private static final String API_KEY = "80b856a2acc361a849858e8123ccef26bef7452f11403072024160737";
+    
+    private static final String TURFS_ENDPOINT = "/vendor/venue/v1/turfs";
+    private static final String SLOTS_ENDPOINT = "/vendor/venue/v1/slots";
+    private static final String BOOK_SLOT_ENDPOINT = "/vendor/venue/v1/bookslot";
+    private static final String CANCEL_BOOKING_ENDPOINT = "/vendor/venue/v1/cancelbooking";
+
+    public static void main(String[] args) {
+        try {
+            // Get all turfs
+            String turfs = getTurfs();
+            System.out.println("Turfs: " + turfs);
+            
+            // Parse the response to get the first turf ID (for demonstration purposes)
+            String turfId = parseTurfId(turfs);
+
+            // Get available slots for the selected turf
+            String slots = getSlots(turfId);
+            System.out.println("Available slots: " + slots);
+
+            // Parse the response to get the first slot ID (for demonstration purposes)
+            String slotId = parseSlotId(slots);
+            String userId = "your_user_id_here";  
+
+            // Book the selected slot
+            String bookingResponse = bookSlot(turfId, slotId, userId);
+            System.out.println("Booking response: " + bookingResponse);
+
+            // Parse the response to get the booking ID (for demonstration purposes)
+            String bookingId = parseBookingId(bookingResponse);
+
+            // Cancel the booking
+            String cancelResponse = cancelBooking(bookingId);
+            System.out.println("Cancel response: " + cancelResponse);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getTurfs() throws Exception {
+        return sendGetRequest(BASE_URL + TURFS_ENDPOINT);
+    }
+
+    private static String getSlots(String turfId) throws Exception {
+        return sendGetRequest(BASE_URL + SLOTS_ENDPOINT + "?turf_id=" + turfId);
+    }
+
+    private static String bookSlot(String turfId, String slotId, String userId) throws Exception {
+        String jsonInputString = "{\"turf_id\":\"" + turfId + "\", \"slot_id\":\"" + slotId + "\", \"user_id\":\"" + userId + "\"}";
+        return sendPostRequest(BASE_URL + BOOK_SLOT_ENDPOINT, jsonInputString);
+    }
+
+    private static String cancelBooking(String bookingId) throws Exception {
+        String jsonInputString = "{\"booking_id\":\"" + bookingId + "\"}";
+        return sendPostRequest(BASE_URL + CANCEL_BOOKING_ENDPOINT, jsonInputString);
+    }
+
+    private static String sendGetRequest(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("X-API-Key", API_KEY);
+
+        int responseCode = conn.getResponseCode();
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        if (responseCode == 200) {
+            return response.toString();
+        } else {
+            throw new Exception("GET request failed with response code: " + responseCode);
+        }
+    }
+
+    private static String sendPostRequest(String urlString, String jsonInputString) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("X-API-Key", API_KEY);
+        conn.setRequestProperty("Content-Type", "application/json; utf-8");
+        conn.setDoOutput(true);
+
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        int responseCode = conn.getResponseCode();
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        if (responseCode == 200) {
+            return response.toString();
+        } else {
+            throw new Exception("POST request failed with response code: " + responseCode);
+        }
+    }
+
+    private static String parseTurfId(String response) {
+        // Parse JSON response to get the first turf ID
+        // Implement JSON parsing as per the actual response structure
+        return "turf_id_placeholder"; 
+
+    private static String parseSlotId(String response) {
+        // Parse JSON response to get the first slot ID
+        // Implement JSON parsing as per the actual response structure
+        return "slot_id_placeholder"; 
+    }
+
+    private static String parseBookingId(String response) {
+        // Parse JSON response to get the booking ID
+        // Implement JSON parsing as per the actual response structure
+        return "booking_id_placeholder";  
+    }
+}
